@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Parfum Shop</title>
+  <style>
+    /* Basis reset */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #222;
+    }
+
+    /* Tabs styling */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .tab {
+      background: #e1e8f0;
+      border-radius: 8px 8px 0 0;
+      padding: 10px 25px;
+      margin: 0 8px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #555;
+      transition: background-color 0.3s, color 0.3s;
+      user-select: none;
+    }
+
+    .tab.active {
+      background: #4a90e2;
+      color: white;
+      box-shadow: 0 4px 6px rgba(74,144,226,0.4);
+    }
+
+    /* Parfum grid */
+    #gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(200px,1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto 60px auto;
+    }
+
+    .parfum-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s ease;
+    }
+
+    .parfum-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 16px rgb(0 0 0 / 0.15);
+    }
+
+    .parfum-card img {
+      width: 120px;
+      height: 150px;
+      object-fit: contain;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      background: #f9f9f9;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+    }
+
+    .parfum-card h3 {
+      font-size: 18px;
+      margin: 0 0 8px;
+      text-align: center;
+      color: #222;
+    }
+
+    .parfum-card p {
+      margin: 0 0 12px;
+      font-weight: bold;
+      color: #4a90e2;
+    }
+
+    .parfum-card a.btn, .parfum-card button.btn {
+      background: #4a90e2;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 6px;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+
+    .parfum-card a.btn:hover, .parfum-card button.btn:hover {
+      background: #357ABD;
+    }
+
+    /* Winkelmandje */
+    #cart-btn {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #ff6b6b;
+      border: none;
+      color: white;
+      padding: 14px 22px;
+      font-size: 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 107, 107, 0.5);
+      z-index: 100;
+      transition: background-color 0.3s ease;
+    }
+
+    #cart-btn:hover {
+      background: #e04e4e;
+    }
+
+    #cart-panel {
+      position: fixed;
+      right: 20px;
+      bottom: 70px;
+      width: 300px;
+      max-height: 400px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      padding: 15px;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      z-index: 101;
+    }
+
+    #cart-panel.open {
+      display: flex;
+    }
+
+    #cart-panel h2 {
+      margin: 0 0 15px 0;
+      font-size: 20px;
+      color: #ff6b6b;
+      text-align: center;
+    }
+
+    #cart-items div {
+      border-bottom: 1px solid #eee;
+      padding: 8px 0;
+      font-size: 15px;
+    }
+
+    #cart-total {
+      font-weight: 700;
+      margin-top: 12px;
+      text-align: right;
+      color: #333;
+    }
+
+  </style>
+</head>
+<body>
+
+<h1>Parfum Shop</h1>
+
+<div class="tabs">
+  <div class="tab active" data-category="men">Mannen</div>
+  <div class="tab" data-category="women">Vrouwen</div>
+  <div class="tab" data-category="unisex">Unisex</div>
+</div>
+
+<div id="gallery"></div>
+
+<button id="cart-btn">Winkelmand 🛒</button>
+
+<div id="cart-panel">
+  <h2>Winkelmand</h2>
+  <div id="cart-items"></div>
+  <p>Totaal: €<span id="cart-total">0.00</span></p>
+</div>
+
+<script>
+  // Parfums data
+  const parfumsData = {
+    men: [
+      {name: "Versace Eros", img:"https://images.unsplash.com/photo-1585386959984-a415522e8d68?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/men/fragrances/eros/", price: 80},
+      {name: "Tom Ford Noir", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80", url:"https://www.tomford.com/noir-extreme-eau-de-parfum/T0-FT2131.html", price: 120},
+      {name: "Yves Saint Laurent La Nuit", img:"https://images.unsplash.com/photo-1518546305924-35bc892a582d?auto=format&fit=crop&w=400&q=80", url:"https://www.yslbeauty.nl/parfums/la-nuit-de-lhomme", price: 90},
+      {name: "Hugo Boss Bottled", img:"https://images.unsplash.com/photo-1583155764267-b0f5df31f7de?auto=format&fit=crop&w=400&q=80", url:"https://www.hugoboss.com/nl-nl/bottled-eau-de-toilette", price: 65},
+      {name: "Calvin Klein Eternity", img:"https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/eternity-men-eau-de-toilette", price: 60},
+      {name: "Jean Paul Gaultier Le Male", img:"https://images.unsplash.com/photo-1524635962361-304a8d8a41bc?auto=format&fit=crop&w=400&q=80", url:"https://www.jeanpaulgaultier.com/en-fragrance/le-male", price: 70},
+      {name: "Givenchy Gentlemen Only", img:"https://images.unsplash.com/photo-1551741719-56b743d4e779?auto=format&fit=crop&w=400&q=80", url:"https://www.givenchybeauty.com/en-gb/gentlemen-only", price: 85},
+      {name: "Gucci Guilty", img:"https://images.unsplash.com/photo-1507608869277-6f7c2eabd79f?auto=format&fit=crop&w=400&q=80", url:"https://www.gucci.com/nl/nl/ca/beauty/fragrances/gucci-guilty", price: 75},
+      {name: "Burberry Mr. Burberry", img:"https://images.unsplash.com/photo-1535631991045-519179e1b29e?auto=format&fit=crop&w=400&q=80", url:"https://www.burberry.com/mr-burberry", price: 80},
+      {name: "Prada Luna Rossa", img:"https://images.unsplash.com/photo-1575843939737-69225d3df324?auto=format&fit=crop&w=400&q=80", url:"https://www.prada.com/eu/en/beauty/fragrances/mens_fragances/luna_rossa.html", price: 85},
+      {name: "Dolce & Gabbana Light Blue", img:"https://images.unsplash.com/photo-1536751974893-f89ca8c17c18?auto=format&fit=crop&w=400&q=80", url:"https://www.dolcegabbana.com/en/fragrances/light-blue", price: 70},
+      {name: "Montblanc Explorer", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", url:"https://www.montblanc.com/en-us/fragrances/explorer", price: 75},
+      {name: "Versace Dylan Blue", img:"https://images.unsplash.com/photo-1563941604091-8d5e850682c9?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/men/fragrances/dylan-blue", price: 80},
+      {name: "Hermès Terre d’Hermès", img:"https://images.unsplash.com/photo-1536331225606-d1b9a1a18cfa?auto=format&fit=crop&w=400&q=80", url:"https://www.hermes.com/nl/nl/product/terre-d-hermes/", price: 90},
+      {name: "Armani Code", img:"https://images.unsplash.com/photo-1512427691650-98b59147b3b9?auto=format&fit=crop&w=400&q=80", url:"https://www.giorgioarmani.com/nl_NL/product/armani-code-eau-de-toilette", price: 85},
+      {name: "Versace Man Eau Fraiche", img:"https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/men/fragrances/man-eau-fraiche", price: 75},
+      {name: "Jean Paul Gaultier Ultra Male", img:"https://images.unsplash.com/photo-1556742046-ec3e322a171f?auto=format&fit=crop&w=400&q=80", url:"https://www.jeanpaulgaultier.com/en-fragrance/ultra-male", price: 78},
+      {name: "Calvin Klein CK One", img:"https://images.unsplash.com/photo-1542831371-d531d36971e6?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/ck-one", price: 55},
+      {name: "Paco Rabanne Invictus", img:"https://images.unsplash.com/photo-1528318023486-26b8b68db4d2?auto=format&fit=crop&w=400&q=80", url:"https://www.pacorabanne.com/en/fragrances/invictus", price: 85},
+      {name: "Dior Sauvage", img:"https://images.unsplash.com/photo-1541534741688-1d98e49d4919?auto=format&fit=crop&w=400&q=80", url:"https://www.dior.com/en_int/fragrance/mens-fragrance/sauvage/sauvage-eau-de-toilette", price: 95},
+      {name: "Azzaro Wanted", img:"https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80", url:"https://www.azzaro.com/en/wanted", price: 70},
+      {name: "Hugo Boss The Scent", img:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80", url:"https://www.hugoboss.com/nl-nl/the-scent-eau-de-toilette", price: 85},
+      {name: "Bvlgari Man", img:"https://images.unsplash.com/photo-1576671080431-6d6a61be523e?auto=format&fit=crop&w=400&q=80", url:"https://www.bulgari.com/en-eu/man", price: 80},
+      {name: "Montblanc Legend", img:"https://images.unsplash.com/photo-1530268729830-bf596e5f5a38?auto=format&fit=crop&w=400&q=80", url:"https://www.montblanc.com/en-us/fragrances/legend", price: 75},
+      {name: "Yves Saint Laurent Kouros", img:"https://images.unsplash.com/photo-1543229418-8400fc6236e3?auto=format&fit=crop&w=400&q=80", url:"https://www.yslbeauty.nl/parfums/kouros", price: 90},
+      {name: "Lacoste Blanc", img:"https://images.unsplash.com/photo-1525946264929-7337b3b012b6?auto=format&fit=crop&w=400&q=80", url:"https://www.lacoste.com/nl/nl/product/lacoste-blanc", price: 60},
+      {name: "John Varvatos Artisan", img:"https://images.unsplash.com/photo-1492496913980-501348b61469?auto=format&fit=crop&w=400&q=80", url:"https://www.johnvarvatos.com/collections/artisan", price: 65},
+      {name: "Issey Miyake L'Eau d'Issey", img:"https://images.unsplash.com/photo-1500336624523-d727130c3328?auto=format&fit=crop&w=400&q=80", url:"https://www.isseymiyake.com/collections/leo-dissey", price: 80},
+      {name: "Mont Blanc Starwalker", img:"https://images.unsplash.com/photo-1522042115049-113adae0f318?auto=format&fit=crop&w=400&q=80", url:"https://www.montblanc.com/en-us/fragrances/starwalker", price: 70},
+      {name: "Calvin Klein Euphoria Men", img:"https://images.unsplash.com/photo-1508606572321-901ea4437073?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/euphoria-men", price: 75},
+      {name: "Versace Pour Homme", img:"https://images.unsplash.com/photo-1523264766116-b6b716e6570e?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/men/fragrances/pour-homme", price: 70},
+      {name: "Givenchy Pi", img:"https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80", url:"https://www.givenchybeauty.com/en-gb/pi", price: 65},
+      {name: "Davidoff Cool Water", img:"https://images.unsplash.com/photo-1520962917855-2ab5b7d9bbdd?auto=format&fit=crop&w=400&q=80", url:"https://www.davidoff.com/en/cool-water", price: 50},
+      {name: "Jean Paul Gaultier Le Beau", img:"https://images.unsplash.com/photo-1556740772-1a741367b93e?auto=format&fit=crop&w=400&q=80", url:"https://www.jeanpaulgaultier.com/en-fragrance/le-beau", price: 80},
+      {name: "Aventus Creed", img:"https://images.unsplash.com/photo-1543293011-7d3460718b5a?auto=format&fit=crop&w=400&q=80", url:"https://www.creedfragrances.co.uk/collections/aventus", price: 230},
+    ],
+    women: [
+      {name: "Chanel No.5", img:"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=400&q=80", url:"https://www.chanel.com/nl/parfum/no5", price: 120},
+      {name: "Dior J’adore", img:"https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80", url:"https://www.dior.com/en_nl/products/beauty-Y0995013-jadore-eau-de-parfum", price: 115},
+      {name: "Lancôme La Vie Est Belle", img:"https://images.unsplash.com/photo-1514972302625-d95f1705dc36?auto=format&fit=crop&w=400&q=80", url:"https://www.lancome.nl/parfums/la-vie-est-belle", price: 100},
+      {name: "Yves Saint Laurent Black Opium", img:"https://images.unsplash.com/photo-1526378724054-09b89671501c?auto=format&fit=crop&w=400&q=80", url:"https://www.yslbeauty.nl/parfums/black-opium", price: 95},
+      {name: "Gucci Bloom", img:"https://images.unsplash.com/photo-1525508693850-4f18f4d19c7e?auto=format&fit=crop&w=400&q=80", url:"https://www.gucci.com/nl/nl/ca/beauty/fragrances/gucci-bloom", price: 110},
+      {name: "Marc Jacobs Daisy", img:"https://images.unsplash.com/photo-1549748987-22052989a63b?auto=format&fit=crop&w=400&q=80", url:"https://www.marcjacobs.com/fragrance/daisy", price: 90},
+      {name: "Versace Bright Crystal", img:"https://images.unsplash.com/photo-1524769489648-5c77ef003172?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/women/fragrances/bright-crystal", price: 85},
+      {name: "Tom Ford Black Orchid", img:"https://images.unsplash.com/photo-1518552783387-c209aaf0043c?auto=format&fit=crop&w=400&q=80", url:"https://www.tomford.com/black-orchid-eau-de-parfum/T0-FT2001.html", price: 130},
+      {name: "Chloé Eau de Parfum", img:"https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80", url:"https://www.chloe.com/en-eu/fragrance/chloe-eau-de-parfum", price: 100},
+      {name: "Calvin Klein Euphoria", img:"https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/euphoria-women", price: 85},
+    ],
+    unisex: [
+      {name: "CK One", img:"https://images.unsplash.com/photo-1542831371-d531d36971e6?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/ck-one", price: 55},
+      {name: "Jo Malone Wood Sage & Sea Salt", img:"https://images.unsplash.com/photo-1512427691650-98b59147b3b9?auto=format&fit=crop&w=400&q=80", url:"https://www.jomalone.com/product/2598/9199/fragrances/wood-sage-sea-salt-cologne", price: 90},
+      {name: "Tom Ford Neroli Portofino", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80", url:"https://www.tomford.com/neroli-portofino-eau-de-parfum/T0-FT2130.html", price: 120},
+      {name: "Maison Margiela Replica", img:"https://images.unsplash.com/photo-1536751974893-f89ca8c17c18?auto=format&fit=crop&w=400&q=80", url:"https://www.maisonmargiela.com/us-en/replica", price: 95},
+      {name: "Le Labo Santal 33", img:"https://images.unsplash.com/photo-1518546305924-35bc892a582d?auto=format&fit=crop&w=400&q=80", url:"https://www.lelabofragrances.com/santal-33", price: 150},
+      {name: "Byredo Gypsy Water", img:"https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80", url:"https://www.byredo.com/gypsy-water", price: 140},
+      {name: "Diptyque Philosykos", img:"https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=400&q=80", url:"https://www.diptyqueparis.com/en_eu/philosykos", price: 130},
+      {name: "Hermès Un Jardin Sur Le Nil", img:"https://images.unsplash.com/photo-1500336624523-d727130c3328?auto=format&fit=crop&w=400&q=80", url:"https://www.hermes.com/nl/nl/product/un-jardin-sur-le-nil/", price: 120},
+      {name: "Calvin Klein CK2", img:"https://images.unsplash.com/photo-1525946264929-7337b3b012b6?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/ck2", price: 60},
+      {name: "Aesop Tacit", img:"https://images.unsplash.com/photo-1549748987-22052989a63b?auto=format&fit=crop&w=400&q=80", url:"https://www.aesop.com/nl/p tacit", price: 110},
+    ],
+  };
+
+  let currentCategory = "men";
+  const gallery = document.getElementById("gallery");
+  const tabs = document.querySelectorAll(".tab");
+  const cartBtn = document.getElementById("cart-btn");
+  const cartPanel = document.getElementById("cart-panel");
+  const cartItemsContainer = document.getElementById("cart-items");
+  const cartTotalDisplay = document.getElementById("cart-total");
+
+  let cart = [];
+
+  function displayParfums() {
+    gallery.innerHTML = '';
+    const parfums = parfumsData[currentCategory];
+    parfums.forEach(parfum => {
+      const card = document.createElement('div');
+      card.className = 'parfum-card';
+
+      card.innerHTML = `
+        <img src="${parfum.img}" alt="${parfum.name}" />
+        <h3>${parfum.name}</h3>
+        <p>€${parfum.price.toFixed(2)}</p>
+        <a href="${parfum.url}" target="_blank" class="btn">Bekijk</a>
+        <button class="btn add-to-cart" data-name="${parfum.name}" data-price="${parfum.price}">In winkelmand</button>
+      `;
+
+      gallery.appendChild(card);
+    });
+  }
+
+  // Tabs click handler
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentCategory = tab.dataset.category;
+      displayParfums();
+    });
+  });
+
+  // Winkelmand toggelen
+  cartBtn.addEventListener("click", () => {
+    cartPanel.classList.toggle("open");
+    updateCartDisplay();
+  });
+
+  // Winkelmand bijwerken
+  function updateCartDisplay() {
+    cartItemsContainer.innerHTML = "";
+    let total = 0;
+    cart.forEach(item => {
+      const div = document.createElement("div");
+      div.textContent = `${item.name} - €${item.price.toFixed(2)}`;
+      cartItemsContainer.appendChild(div);
+      total += item.price;
+    });
+    cartTotalDisplay.textContent = total.toFixed(2);
+  }
+
+  // Item toevoegen aan winkelmand
+  gallery.addEventListener("click", e => {
+    if (e.target.classList.contains("add-to-cart")) {
+      const name = e.target.dataset.name;
+      const price = parseFloat(e.target.dataset.price);
+      cart.push({ name, price });
+      updateCartDisplay();
+      alert(`${name} is toegevoegd aan je winkelmand.`);
+    }
+  });
+
+  // Init
+  displayParfums();
+</script>
+
+</body>
+</html>
